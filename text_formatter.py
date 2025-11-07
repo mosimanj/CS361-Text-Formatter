@@ -1,41 +1,10 @@
-"""
-Text Formatter Microservice
-
-TODO: NOTE TO RYAN: I put this here for now but we should probably make a nice
-TODO: README file that has all this info on how to use this service.
-
-This microservice provides multiple text formatting options.
-Users can specify which type of formatting they want:
-- sentence: Capitalize first letter only (default)
-- upper: Convert all text to uppercase
-- lower: Convert all text to lowercase
-- title: Capitalize first letter of each word
-
-Communication: ZeroMQ REQ-REP pattern
-Port: 5555
-Protocol: JSON
-
-Request Format:
-{
-    "text": "  example text  ",
-    "format_type": "upper"  // Optional: "sentence", "upper", "lower", "title"
-}
-
-Response Format:
-{
-    "formatted_text": "EXAMPLE TEXT"
-}
-
-If format_type is not specified, defaults to "sentence" for backward compatibility
-"""
-
 import zmq
 import json
 
 
 def format_text_sentence(text):
     """
-    Format text as sentence case (capitalize first letter only)
+    Format text as sentence case (capitalize first letter of every sentence)
     Also removes extra spaces and trims whitespace
     """
     if not text:
@@ -44,11 +13,27 @@ def format_text_sentence(text):
     # remove extra spaces between words and trim
     formatted = ' '.join(text.split())
 
-    # capitalize first letter if there's any text
-    if formatted:
-        formatted = formatted[0].upper() + formatted[1:] if len(formatted) > 1 else formatted.upper()
+    # split formatted text by sentence
+    sentences = []
+    current = ""
+    punctuation = ".!?"
+    for char in formatted:
+        current += char
+        if char in punctuation:
+            sentences.append(current)
+            current = ""
+    # whatever is remaining in current added to end
+    if current:
+        sentences.append(current)
 
-    return formatted
+    # capitalize first letter of every sentence
+    upper_sentences = []
+    if sentences:
+        for s in sentences:
+            s = s.strip()
+            upper_sentences.append(s[0].upper() + s[1:] if len(s) > 1 else s.upper())
+
+    return " ".join(upper_sentences)
 
 
 def format_text_upper(text):
@@ -132,7 +117,7 @@ def main():
     port = 5555
     socket.bind(f"tcp://*:{port}")
 
-    # printing to it's easy to see what's going on
+    # printing so it's easy to see what's going on
     print("=" * 60)
     print("Text Formatter Microservice - Enhanced Version")
     print("=" * 60)
