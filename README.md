@@ -23,7 +23,7 @@ Each request must be a JSON object with parameters:
     - “sentence”: capitalizes the first alphabetic character of every sentence
     - “upper”: converts all characters to uppercase
     - “lower”: converts all characters to lowercase
-    - “title: capitalizes first letter of each word
+    - “title”: capitalizes first letter of each word
 
 ```
 Example Call:
@@ -54,7 +54,39 @@ Example Call:
 response_json = socket.recv_string()
 response = json.loads(response_json)
 formatted_text = response.get("formatted_text", "")
-print(formatted_text) # Example sentence. Another example sentence.
+print(formatted_text) # "Example sentence. Another example sentence."
 ```
+
+## How to Run
+
+### Start the Microservice
+```bash
+python text_formatter.py
+```
+
+### Run the Test Program
+In a separate terminal:
+```bash
+python test_program.py
+```
+
+### Run Unit Tests (Optional)
+```bash
+python -m unittest test_text_formatter.py
+```
+
+### Expected Output
+The microservice will display:
+- Status: Running
+- Port: 5555
+- Format types available
+- Request count and details
+
+The test program will display:
+- Request sent
+- Response received  
+- Formatted text result
+```
+
 ### UML sequence diagram
 ![UML Sequence Diagram](text_formatter_uml.png)
