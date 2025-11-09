@@ -57,3 +57,4 @@ formatted_text = response.get("formatted_text", "")
 print(formatted_text) # Example sentence. Another example sentence.
 ```
 ### UML sequence diagram
+![UML Sequence Diagram](text_formatter_uml.png)
