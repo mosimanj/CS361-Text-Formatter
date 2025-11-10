@@ -84,9 +84,8 @@ The microservice will display:
 
 The test program will display:
 - Request sent
-- Response received  
+- Response received
 - Formatted text result
-```
 
 ### UML sequence diagram
 ![UML Sequence Diagram](text_formatter_uml.png)
