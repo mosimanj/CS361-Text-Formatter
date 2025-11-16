@@ -93,7 +93,21 @@ def format_text(text, format_type="sentence"):
     else:
         return "", f"Invalid format_type: '{format_type}'. Valid options: 'sentence', 'upper', 'lower', 'title'"
 
-def log_status(port):
+
+def main():
+    """
+    Main service loop
+    Sets up ZeroMQ and listens for formatting requests
+    """
+    context = zmq.Context()
+    socket = context.socket(zmq.REP)
+
+    #TODO: we need to agree as a team which of our services use which ports
+    #TODO: so we don't step on each other's toes
+
+    port = 5555
+    socket.bind(f"tcp://*:{port}")
+
     print("=" * 60)
     print("Text Formatter Microservice - Enhanced Version")
     print("=" * 60)
@@ -105,79 +119,6 @@ def log_status(port):
     print("=" * 60)
     print()
 
-def setup_socket():
-    context = zmq.Context()
-    socket = context.socket(zmq.REP)
-
-    #TODO: we need to agree as a team which of our services use which ports
-    #TODO: so we don't step on each other's toes
-
-    port = 5555
-    socket.bind(f"tcp://*:{port}")
-
-    log_status(port)
-
-    return socket, context
-
-def process_request(message):
-    request = json.loads(message)
-
-    text = request.get("text", "")
-    format_type = request.get("format_type", "sentence")
-
-    formatted_text, error = format_text(text, format_type)
-
-    return formatted_text, error
-
-def process_response(request_count, socket, formatted_text, error):
-    if error:
-        response = {
-            "formatted_text": "",
-            "error": error
-        }
-    else:
-        response = {
-            "formatted_text": formatted_text
-        }
-
-    response_json = json.dumps(response)
-    socket.send_string(response_json)
-    print(f"[Request #{request_count}] Sent: {response_json}")
-    print()
-
-def handle_json_decode_error(request_count, socket, e):
-    error_response = {
-        "formatted_text": "",
-        "error": f"Invalid JSON: {str(e)}"
-    }
-
-    socket.send_string(json.dumps(error_response))
-    print(f"[Request #{request_count}] Error: Invalid JSON")
-    print()
-
-def handle_error(request_count, socket, e):
-    error_response = {
-        "formatted_text": "",
-        "error": f"Server error: {str(e)}"
-    }
-
-    socket.send_string(json.dumps(error_response))
-    print(f"[Request #{request_count}] Error: {str(e)}")
-    print()
-
-def log_keyboard_interrupt(request_count):
-    print("\n" + "=" * 60)
-    print("Shutting down Text Formatter service...")
-    print(f"Total requests processed: {request_count}")
-    print("=" * 60)
-
-def main():
-    """
-    Main service loop
-    Sets up ZeroMQ and listens for formatting requests
-    """
-    socket, context = setup_socket()
-
     request_count = 0
 
     try:
@@ -188,18 +129,52 @@ def main():
             print(f"[Request #{request_count}] Received: {message}")
 
             try:
-                formatted_text, error = process_request(message)
+                request = json.loads(message)
 
-                process_response(request_count, socket, formatted_text, error)
+                text = request.get("text", "")
+                format_type = request.get("format_type", "sentence")
+
+                formatted_text, error = format_text(text, format_type)
+
+                if error:
+                    response = {
+                        "formatted_text": "",
+                        "error": error
+                    }
+                else:
+                    response = {
+                        "formatted_text": formatted_text
+                    }
+
+                response_json = json.dumps(response)
+                socket.send_string(response_json)
+
+                print(f"[Request #{request_count}] Sent: {response_json}")
+                print()
 
             except json.JSONDecodeError as e:
-                handle_json_decode_error(request_count, socket, e)
+                error_response = {
+                    "formatted_text": "",
+                    "error": f"Invalid JSON: {str(e)}"
+                }
+                socket.send_string(json.dumps(error_response))
+                print(f"[Request #{request_count}] Error: Invalid JSON")
+                print()
 
             except Exception as e:
-                handle_error(request_count, socket, e)
+                error_response = {
+                    "formatted_text": "",
+                    "error": f"Server error: {str(e)}"
+                }
+                socket.send_string(json.dumps(error_response))
+                print(f"[Request #{request_count}] Error: {str(e)}")
+                print()
 
     except KeyboardInterrupt:
-        log_keyboard_interrupt(request_count)
+        print("\n" + "=" * 60)
+        print("Shutting down Text Formatter service...")
+        print(f"Total requests processed: {request_count}")
+        print("=" * 60)
 
     finally:
         socket.close()
