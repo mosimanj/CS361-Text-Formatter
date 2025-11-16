@@ -10,7 +10,6 @@ def format_text_sentence(text):
     if not text:
         return ""
 
-    # remove extra spaces between words and trim
     formatted = ' '.join(text.split())
 
     # split formatted text by sentence
@@ -22,7 +21,7 @@ def format_text_sentence(text):
         if char in punctuation:
             sentences.append(current)
             current = ""
-    # whatever is remaining in current added to end
+            
     if current:
         sentences.append(current)
 
@@ -44,10 +43,8 @@ def format_text_upper(text):
     if not text:
         return ""
 
-    # Remove extra spaces between words and trim
     formatted = ' '.join(text.split())
 
-    # Convert to uppercase
     return formatted.upper()
 
 
@@ -59,10 +56,8 @@ def format_text_lower(text):
     if not text:
         return ""
 
-    # remove extra spaces between words and trim
     formatted = ' '.join(text.split())
 
-    # convert to lowercase
     return formatted.lower()
 
 
@@ -74,10 +69,8 @@ def format_text_title(text):
     if not text:
         return ""
 
-    # remove extra spaces between words and trim
     formatted = ' '.join(text.split())
 
-    # capitalize first letter of each word
     return formatted.title()
 
 
@@ -106,18 +99,15 @@ def main():
     Main service loop
     Sets up ZeroMQ and listens for formatting requests
     """
-    # create zeromq context and socket
     context = zmq.Context()
     socket = context.socket(zmq.REP)
 
-    # Bind to port 5555
     #TODO: we need to agree as a team which of our services use which ports
     #TODO: so we don't step on each other's toes
 
     port = 5555
     socket.bind(f"tcp://*:{port}")
 
-    # printing so it's easy to see what's going on
     print("=" * 60)
     print("Text Formatter Microservice - Enhanced Version")
     print("=" * 60)
@@ -133,24 +123,19 @@ def main():
 
     try:
         while True:
-            # wait for request from client
             message = socket.recv_string()
             request_count += 1
 
             print(f"[Request #{request_count}] Received: {message}")
 
             try:
-                # parse JSON request
                 request = json.loads(message)
 
-                # get text and format_type from request
                 text = request.get("text", "")
                 format_type = request.get("format_type", "sentence")
 
-                # format the text
                 formatted_text, error = format_text(text, format_type)
 
-                # create response
                 if error:
                     response = {
                         "formatted_text": "",
@@ -161,7 +146,6 @@ def main():
                         "formatted_text": formatted_text
                     }
 
-                # send JSON response
                 response_json = json.dumps(response)
                 socket.send_string(response_json)
 
@@ -169,7 +153,6 @@ def main():
                 print()
 
             except json.JSONDecodeError as e:
-                # handle invalid JSON
                 error_response = {
                     "formatted_text": "",
                     "error": f"Invalid JSON: {str(e)}"
@@ -179,7 +162,6 @@ def main():
                 print()
 
             except Exception as e:
-                # handle other errors
                 error_response = {
                     "formatted_text": "",
                     "error": f"Server error: {str(e)}"
