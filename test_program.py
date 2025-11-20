@@ -1,5 +1,4 @@
-import zmq
-import json
+import zmq, json
 
 
 def test_formatter(description, text, format_type="sentence"):
@@ -36,6 +35,11 @@ if __name__ == "__main__":
     # sentence case
     test_formatter("Sentence case formatting",
                    "  hello world.  goodbye world.  ",
+                   "sentence")
+
+    # sentence case edge cases
+    test_formatter("Sentence case formatting",
+                   "  hello!  Dr. Smith is my friend. I want to visit the U.S. to see him. Maybe I will in 3.5 months.",
                    "sentence")
 
     # uppercase
