@@ -1,5 +1,4 @@
-import zmq
-import json
+import zmq, json
 
 
 def format_text_sentence(text):
@@ -21,7 +20,7 @@ def format_text_sentence(text):
         if char in punctuation:
             sentences.append(current)
             current = ""
-            
+
     if current:
         sentences.append(current)
 
@@ -108,9 +107,6 @@ def log_status(port):
 def setup_socket():
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-
-    #TODO: we need to agree as a team which of our services use which ports
-    #TODO: so we don't step on each other's toes
 
     port = 5555
     socket.bind(f"tcp://*:{port}")
