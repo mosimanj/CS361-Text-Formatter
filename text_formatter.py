@@ -1,5 +1,4 @@
-import zmq
-import json
+import zmq, json, re
 
 
 def format_text_sentence(text):
@@ -12,18 +11,8 @@ def format_text_sentence(text):
 
     formatted = ' '.join(text.split())
 
-    # split formatted text by sentence
-    sentences = []
-    current = ""
-    punctuation = ".!?"
-    for char in formatted:
-        current += char
-        if char in punctuation:
-            sentences.append(current)
-            current = ""
-            
-    if current:
-        sentences.append(current)
+    # split text into sentences using regex
+    sentences = split_text(formatted)
 
     # capitalize first letter of every sentence
     upper_sentences = []
@@ -33,6 +22,30 @@ def format_text_sentence(text):
             upper_sentences.append(s[0].upper() + s[1:] if len(s) > 1 else s.upper())
 
     return " ".join(upper_sentences)
+
+
+def split_text(text):
+    """
+    Split text into sentences using regex
+    """
+    reg_pattern = r'(?<![A-Z])(?<!\d)([.!?]+)(?=\s+[A-Z]|$)'
+    txt_parts = re.split(reg_pattern, text)
+
+    # recombine text parts into sentences with correct punctuation
+    sentences = []
+    punctuation = ".!?"
+    i = 0
+    while i < len(txt_parts):
+        if i + 1 < len(txt_parts) and txt_parts[i + 1] in punctuation:
+            sentences.append(txt_parts[i] + txt_parts[i + 1])
+            i += 2
+        elif txt_parts[i].strip(): # add only non-whitespace chars
+            sentences.append(txt_parts[i])
+            i += 1
+        else:
+            i += 1
+
+    return sentences
 
 
 def format_text_upper(text):
@@ -108,9 +121,6 @@ def log_status(port):
 def setup_socket():
     context = zmq.Context()
     socket = context.socket(zmq.REP)
-
-    #TODO: we need to agree as a team which of our services use which ports
-    #TODO: so we don't step on each other's toes
 
     port = 5555
     socket.bind(f"tcp://*:{port}")
